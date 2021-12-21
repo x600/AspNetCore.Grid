@@ -55,13 +55,14 @@ namespace NonFactors.Mvc.Grid
             {
                 ParameterExpression parameter = Expression.Parameter(type, "x");
                 Expression? filter = Filter.Apply(Expression.Lambda(parameter, parameter).Body);
+
                 MethodInfo any = typeof(Enumerable).GetMethods()
                     .First(method =>
                         method.Name == nameof(Enumerable.Any) &&
                         method.GetParameters().Length == 2)
                     .MakeGenericMethod(type);
 
-                return Expression.Call(any, expression, Expression.Lambda(filter, parameter));
+                return Expression.Call(any, expression, Expression.Lambda(filter!, parameter));
             }
 
             return null;

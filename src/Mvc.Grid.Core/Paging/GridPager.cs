@@ -4,6 +4,8 @@ using System.Linq;
 
 namespace NonFactors.Mvc.Grid
 {
+    public enum PagerDisplayPosition { Top, Bottom, TopAndBottom }
+
     public class GridPager<T> : IGridPager<T>
     {
         public IGrid<T> Grid { get; set; }
@@ -92,6 +94,14 @@ namespace NonFactors.Mvc.Grid
 
         private Int32 CurrentPageValue { get; set; }
         private Int32 RowsPerPageValue { get; set; }
+
+        #region X600
+
+        public PagerDisplayPosition Position { get; set; } = PagerDisplayPosition.TopAndBottom;
+
+
+
+        #endregion
 
         public GridPager(IGrid<T> grid)
         {

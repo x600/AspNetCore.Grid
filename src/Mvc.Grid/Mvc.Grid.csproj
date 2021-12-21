@@ -12,6 +12,8 @@
     <RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
+    <AssemblyVersion>6.2.20316.1</AssemblyVersion>
+    <FileVersion>6.2.20316.1</FileVersion>
   </PropertyGroup>
 
 </Project>

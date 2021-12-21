@@ -21,14 +21,15 @@ namespace NonFactors.Mvc.Grid
         {
             foreach (KeyValuePair<String, Object?> attribute in this)
             {
-                if (attribute.Value == null)
-                    continue;
+                string? ss = Convert.ToString(attribute.Value);
+
+                if (ss == null) continue;
 
                 writer.Write(" ");
                 writer.Write(attribute.Key);
                 writer.Write("=\"");
 
-                writer.Write(encoder.Encode(attribute.Value.ToString()));
+                writer.Write(encoder.Encode(ss));
 
                 writer.Write("\"");
             }

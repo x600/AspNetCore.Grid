@@ -23,6 +23,18 @@ namespace NonFactors.Mvc.Grid
         IGridColumns<IGridColumn> Columns { get; }
         IGridRows<Object> Rows { get; }
         IGridPager? Pager { get; }
+
+        #region X600
+
+        int TotalRowsCount { get; }
+
+        int CurrentPage { get; }
+
+        int MinRowNumber { get; }
+        int MaxRowNumber { get; }
+
+        #endregion
+
     }
 
     public interface IGrid<T> : IGrid

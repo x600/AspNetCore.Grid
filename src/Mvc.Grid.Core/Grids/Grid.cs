@@ -47,5 +47,55 @@ namespace NonFactors.Mvc.Grid
             Rows = new GridRows<T>(this);
             Sort = new GridSort<T>(this);
         }
-    }
+
+		#region X600
+
+		public int TotalRowsCount
+		{
+			get
+			{
+				if (Source == null) return 0;
+				else return Source.Count();
+			}
+		}
+
+		public int CurrentPage
+		{
+			get
+			{
+				if (Pager != null)
+					return Pager.CurrentPage;
+				else
+					return 1;
+			}
+		}
+
+		public int MinRowNumber
+		{
+			get
+			{
+				if (Pager == null) return 1;
+				return (CurrentPage - 1) * Pager.RowsPerPage + 1;
+			}
+		}
+
+		public int MaxRowNumber
+		{
+			get
+			{
+				if (Pager == null || TotalRowsCount < Pager.RowsPerPage)
+				{
+					return TotalRowsCount;
+				}
+
+				if (CurrentPage * Pager.RowsPerPage < TotalRowsCount)
+				{
+					return CurrentPage * Pager.RowsPerPage;
+				}
+				return TotalRowsCount;
+			}
+		}
+
+		#endregion
+	}
 }

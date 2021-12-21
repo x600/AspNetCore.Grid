@@ -16,6 +16,12 @@ namespace NonFactors.Mvc.Grid
 
         String CssClasses { get; set; }
         String PartialViewName { get; set; }
+
+        #region X600
+
+        PagerDisplayPosition Position { get; set; }
+
+        #endregion
     }
 
     public interface IGridPager<T> : IGridProcessor<T>, IGridPager

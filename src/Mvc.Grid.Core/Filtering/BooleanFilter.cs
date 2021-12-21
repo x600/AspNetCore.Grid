@@ -13,7 +13,7 @@ namespace NonFactors.Mvc.Grid
 
             try
             {
-                Object boolValue = TypeDescriptor.GetConverter(expression.Type).ConvertFrom(value);
+				object? boolValue = TypeDescriptor.GetConverter(expression.Type).ConvertFrom(value!);
 
                 return Method switch
                 {

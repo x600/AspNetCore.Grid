@@ -13,7 +13,7 @@ namespace NonFactors.Mvc.Grid
 
             try
             {
-                Object enumValue = TypeDescriptor.GetConverter(expression.Type).ConvertFrom(value);
+                Object? enumValue = TypeDescriptor.GetConverter(expression.Type).ConvertFrom(value!);
 
                 return Method switch
                 {

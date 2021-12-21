@@ -13,7 +13,7 @@ namespace NonFactors.Mvc.Grid
 
             try
             {
-                Object guidValue = TypeDescriptor.GetConverter(expression.Type).ConvertFrom(value);
+                Object? guidValue = TypeDescriptor.GetConverter(expression.Type).ConvertFrom(value!);
 
                 return Method switch
                 {
