@@ -1,12 +1,17 @@
 /*!
- * Mvc.Grid 6.2.1
- * https://github.com/NonFactors/AspNetCore.Grid
+ * Mvc.Grid 7.1 (NonFactors + x600)
  *
  * Copyright © NonFactors
  *
  * Licensed under the terms of the MIT License
  * https://www.opensource.org/licenses/mit-license.php
+ * https://aspnet-core-grid.azurewebsites.net/
+ * 
+ * X600.Grid 7.1
+ * 
  */
+
+import { AjaxException } from "../../Network/AjaxException.js";
 
 export interface MvcGridOptions {
     url: URL;
@@ -29,6 +34,7 @@ export interface MvcGridConfiguration {
     name: string;
     columns: {
         name: string;
+        width: string;
         hidden: boolean;
     }[];
 }
@@ -82,7 +88,6 @@ export class MvcGrid {
     public columns: MvcGridColumn[];
 
     public pager?: MvcGridPager;
-    public loader?: HTMLDivElement;
     public controller: AbortController;
 
     public url: URL;
@@ -97,7 +102,13 @@ export class MvcGrid {
         [type: string]: typeof MvcGridFilter | undefined;
     };
 
+    errorLabel: HTMLElement;
+    errorPanel: HTMLElement;
+    progress: HTMLElement;
+
+
     public constructor(container: HTMLElement, options: Partial<MvcGridOptions> = {}) {
+
         const grid = this;
         const element = grid.findGrid(container);
 
@@ -127,10 +138,13 @@ export class MvcGrid {
             number: MvcGridNumberFilter
         };
 
-        const rowFilters = element.querySelectorAll<HTMLTableHeaderCellElement>(".mvc-grid-row-filters th");
+        const headers = element.querySelector(".mvc-grid-headers");
+        const rowFilters = element.querySelectorAll<HTMLTableCellElement>(".mvc-grid-row-filters th");
 
-        for (const [i, header] of element.querySelectorAll<HTMLTableHeaderCellElement>(".mvc-grid-headers th").entries()) {
-            grid.columns.push(new MvcGridColumn(grid, header, rowFilters[i]));
+        if (headers) {
+            for (const [i, header] of headers.querySelectorAll("th").entries()) {
+                grid.columns.push(new MvcGridColumn(grid, header, rowFilters[i]));
+            }
         }
 
         const pager = element.querySelector<HTMLElement>(".mvc-grid-pager");
@@ -150,17 +164,37 @@ export class MvcGrid {
         }
 
         if (!element.children.length) {
-            grid.reload();
+            //grid.reload();
         }
+
+        // ERROR LABEL
+
+        this.errorLabel = document.createElement("span");
+        this.errorPanel = document.createElement("div");
+        this.errorPanel.appendChild(this.errorLabel);
+        this.errorPanel.setAttribute("data-role", "error");
+
+
+        //PROGRESS
+
+        this.progress = document.createElement("div");
+        this.progress.setAttribute("data-role", "loading-progress");
+
+        this.element.appendChild(this.errorPanel);
+        this.element.appendChild(this.progress);
+        this.progress.classList.add("loader");
+
+        this.element.setAttribute("data-role", "gridview-container");
+        //this.element.classList.add("ajax-web-control");
     }
 
     public set(options: Partial<MvcGridOptions>) {
         const grid = this;
 
-        grid.loadingDelay = typeof options.loadingDelay == "number" ? options.loadingDelay : grid.loadingDelay;
+        grid.loadingDelay = typeof options.loadingDelay === "undefined" ? grid.loadingDelay : options.loadingDelay;
         grid.url = options.url ? new URL(options.url.toString(), location.href) : grid.url;
         grid.url = options.query ? new URL(`?${options.query}`, grid.url.href) : grid.url;
-        grid.isAjax = typeof options.isAjax == "boolean" ? options.isAjax : grid.isAjax;
+        grid.isAjax = typeof options.isAjax === "boolean" ? options.isAjax : grid.isAjax;
         grid.filters = Object.assign(grid.filters, options.filters);
 
         for (const column of grid.columns) {
@@ -178,16 +212,24 @@ export class MvcGrid {
     public getConfiguration() {
         return {
             name: this.name,
-            columns: this.columns.map(column => ({ name: column.name, hidden: column.isHidden }))
+            columns: this.columns.map(column => ({
+                name: column.name,
+                hidden: column.isHidden,
+                width: column.header.style.width
+            }))
         } as MvcGridConfiguration;
     }
     public configure(configuration: MvcGridConfiguration) {
         configuration.columns.forEach((column, index) => {
             const rows = this.element.querySelectorAll("tr");
-            const i = this.columns.findIndex(col => col.name.toLowerCase() == column.name.toLowerCase());
+            const i = this.columns.findIndex(col => col.name.toLowerCase() === column.name.toLowerCase());
 
             if (i >= 0) {
-                this.columns[i].isHidden = column.hidden == true;
+                this.columns[i].isHidden = column.hidden;
+
+                if (column.width.trim()) {
+                    this.columns[i].header.style.width = column.width.split(";", 2)[0];
+                }
 
                 for (const tr of rows) {
                     if (column.hidden) {
@@ -196,7 +238,7 @@ export class MvcGrid {
                         tr.children[i].classList.remove("mvc-grid-hidden");
                     }
 
-                    if (i != index) {
+                    if (i !== index) {
                         tr.insertBefore(tr.children[i], tr.children[index]);
                     }
                 }
@@ -206,6 +248,19 @@ export class MvcGrid {
         });
     }
 
+    private get rowCount() {
+
+        let rowCount: number = 0;
+
+        if (this.element.attributes["data-row-count"] != null) {
+
+            rowCount = this.element.attributes["data-row-count"].value;
+        }
+
+        return rowCount;
+    }
+
+
     public reload() {
         const grid = this;
 
@@ -214,43 +269,61 @@ export class MvcGrid {
             bubbles: true
         }));
 
+        // AT CHANGES
+
+        grid.element.setAttribute("data-error", "false");
+
+        if (grid.rowCount > 0) {
+
+            grid.element.setAttribute("data-loading", "partial");
+        }
+        else {
+            grid.element.setAttribute("data-loading", "full");
+        }
+
+        this.errorLabel.textContent = "";
+
+
         if (grid.isAjax) {
             const url = new URL(grid.url.href);
 
             grid.controller.abort();
             MvcGridPopup.lastActiveElement = null;
             grid.controller = new AbortController();
-            url.searchParams.set("_", String(Date.now()));
 
-            if (grid.loadingDelay != null) {
-                if (grid.loader && grid.loader.parentElement) {
-                    clearTimeout(grid.loadingTimerId);
-                } else {
-                    const loader = document.createElement("template");
+            //if (grid.loadingDelay !== null) {
+            //    const loader = `<td colspan="${grid.columns.length}"><div class="mvc-grid-loader"><div class="mvc-grid-spinner"></div></div></td>`;
 
-                    loader.innerHTML = `<div class="mvc-grid-loader"><div><div></div><div></div><div></div></div></div>`;
-                    grid.loader = loader.content.firstElementChild as HTMLDivElement;
+            //    clearTimeout(grid.loadingTimerId);
 
-                    grid.element.appendChild(grid.loader);
-                }
-
-                grid.loadingTimerId = setTimeout(() => {
-                    grid.loader!.classList.add("mvc-grid-loading");
-                }, grid.loadingDelay);
-            }
+            //    grid.loadingTimerId = window.setTimeout(() => {
+            //        for (const row of grid.element.querySelectorAll("tbody > tr")) {
+            //            row.innerHTML = loader;
+            //        }
+            //    }, grid.loadingDelay);
+            //}
 
             MvcGridPopup.hide();
 
             fetch(url.href, {
                 signal: grid.controller.signal,
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            }).then(response => {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }).then(async (response) => {
+
+                let data = await response.text();
+
                 if (!response.ok) {
-                    throw new Error(`Invalid response status: ${response.status}`);
+
+                    throw new AjaxException(data, url.href);
+                    //throw new Error(`Invalid response status: ${response.status}`);
                 }
 
-                return response.text();
+                return data;
+
             }).then(response => {
+
                 const parent = grid.element.parentElement!;
                 const template = document.createElement("template");
                 const i = Array.from(parent.children).indexOf(grid.element);
@@ -275,26 +348,40 @@ export class MvcGrid {
                     detail: { grid: newGrid },
                     bubbles: true
                 }));
-            }).catch(reason => {
-                if (reason.name == "AbortError") {
+            }).catch((ex: AjaxException) => {
+
+                if (ex.status == 600) {
+
+                    //request aborted. Usually means normal cancelling. 
                     return Promise.resolve();
                 }
 
-                if (grid.loader && grid.loader.parentElement) {
-                    grid.loader.parentElement.removeChild(grid.loader);
+                if (ex.name === "AbortError") {
+                    return Promise.resolve();
                 }
 
+                this.element.attributes.removeNamedItem("data-loading");
+
                 const cancelled = !grid.element.dispatchEvent(new CustomEvent("reloadfail", {
-                    detail: { grid, reason },
+                    detail: { grid, ex },
                     cancelable: true,
                     bubbles: true
                 }));
 
-                return cancelled ? Promise.resolve() : Promise.reject(reason);
+
+                return cancelled ? Promise.resolve() : Promise.reject(ex);
+
             });
-        } else {
+        }
+        else {
             location.href = grid.url.href;
         }
+    }
+
+    public showError(errorMessage: string) {
+
+        this.element.setAttribute("data-error", "true");
+        this.errorLabel.innerHTML = errorMessage;
     }
 
     private buildSort() {
@@ -328,12 +415,16 @@ export class MvcGrid {
     private bind() {
         const grid = this;
 
-        for (const row of grid.element.querySelectorAll<HTMLTableRowElement>("tbody tr")) {
+        for (const row of grid.element.querySelectorAll<HTMLTableRowElement>("tbody > tr")) {
             if (!row.classList.contains("mvc-grid-empty-row")) {
                 row.addEventListener("click", function (e) {
                     const data: { [type: string]: string; } = {};
 
                     for (const [i, column] of grid.columns.entries()) {
+                        if (row.cells.length <= i) {
+                            return;
+                        }
+
                         data[column.name] = row.cells[i].innerText;
                     }
 
@@ -355,7 +446,7 @@ export class MvcGridColumn {
     public sort: MvcGridColumnSort | null;
     public filter: MvcGridColumnFilter | null;
 
-    public constructor(grid: MvcGrid, header: HTMLElement, rowFilter: HTMLElement | null) {
+    public constructor(grid: MvcGrid, header: HTMLElement, rowFilter?: HTMLElement) {
         const column = this;
         const data = header.dataset;
 
@@ -408,8 +499,8 @@ export class MvcGridColumnSort {
         const map = sort.column.grid.sort;
         const query = grid.url.searchParams;
 
-        if (sort.order == sort.first) {
-            sort.order = sort.order == "asc" ? "desc" : "asc";
+        if (sort.order === sort.first) {
+            sort.order = sort.order === "asc" ? "desc" : "asc";
         } else if (sort.order) {
             sort.order = "";
         } else {
@@ -442,7 +533,7 @@ export class MvcGridColumnSort {
         const column = sort.column;
 
         column.header.addEventListener("click", e => {
-            if (!column.filter || column.grid.filterMode != "header") {
+            if (!column.filter || column.grid.filterMode !== "header") {
                 if (!/mvc-grid-(sort|filter)/.test((e.target as Element).className)) {
                     sort.toggle(e.ctrlKey || e.shiftKey);
                 }
@@ -470,13 +561,13 @@ export class MvcGridColumnFilter {
         values: string[];
     };
     public column: MvcGridColumn;
+    public rowFilter?: HTMLElement;
     public instance?: MvcGridFilter;
     public button: HTMLButtonElement;
-    public rowFilter: HTMLElement | null;
     public options: HTMLSelectElement | null;
     public inlineInput: HTMLInputElement | null;
 
-    public constructor(column: MvcGridColumn, rowFilter: HTMLElement | null) {
+    public constructor(column: MvcGridColumn, rowFilter?: HTMLElement) {
         const values = [];
         const methods = [];
         const filter = this;
@@ -485,16 +576,16 @@ export class MvcGridColumnFilter {
         const name = `${column.grid.prefix + column.name}-`;
         let options = column.header.querySelector<HTMLSelectElement>(".mvc-grid-options");
 
-        if (column.grid.filterMode == "row") {
+        if (column.grid.filterMode === "row") {
             options = rowFilter!.querySelector("select");
         }
 
-        if (options && options.classList.contains("mvc-grid-options")) {
+        if (options?.classList.contains("mvc-grid-options")) {
             options.parentElement!.removeChild(options);
         }
 
         for (const parameter of query.entries()) {
-            if (parameter[0] != `${name}op` && parameter[0].startsWith(name)) {
+            if (parameter[0] !== `${name}op` && parameter[0].startsWith(name)) {
                 methods.push(parameter[0].substring(name.length));
                 values.push(parameter[1]);
             }
@@ -503,7 +594,7 @@ export class MvcGridColumnFilter {
         filter.column = column;
         filter.rowFilter = rowFilter;
         filter.name = data.filter || "default";
-        filter.isApplied = data.filterApplied == "True";
+        filter.isApplied = data.filterApplied === "True";
         filter.defaultMethod = data.filterDefaultMethod || "";
         filter.type = (data.filterType || "single").toLowerCase() as any;
         filter.options = options && options.children.length > 0 ? options : null;
@@ -512,14 +603,14 @@ export class MvcGridColumnFilter {
 
         filter.first = {
             method: methods[0] || "",
-            values: filter.type == "multi" ? values : values.slice(0, 1)
+            values: filter.type === "multi" ? values : values.slice(0, 1)
         };
 
-        filter.operator = filter.type == "double" ? query.get(`${name}op`) || "" : "";
+        filter.operator = filter.type === "double" ? query.get(`${name}op`) || "" : "";
 
         filter.second = {
-            method: filter.type == "double" ? methods[1] || "" : "",
-            values: filter.type == "double" ? values.slice(1, 2) : []
+            method: filter.type === "double" ? methods[1] || "" : "",
+            values: filter.type === "double" ? values.slice(1, 2) : []
         };
 
         this.bind();
@@ -543,16 +634,16 @@ export class MvcGridColumnFilter {
         query.delete(`${prefix}page`);
         query.delete(`${prefix}rows`);
 
-        for (const column of grid.columns.filter(col => col.filter && (col == this.column || col.filter.isApplied || col.filter.first.values[0]))) {
+        for (const column of grid.columns.filter(col => col.filter && (col === this.column || col.filter.isApplied || col.filter.first.values[0]))) {
             const filter = column.filter!;
 
             query.set(`${prefix + column.name}-${filter.first.method}`, filter.first.values[0] || "");
 
-            for (let i = 1; filter.type == "multi" && i < filter.first.values.length; i++) {
+            for (let i = 1; filter.type === "multi" && i < filter.first.values.length; i++) {
                 query.append(`${prefix + column.name}-${filter.first.method}`, filter.first.values[i] || "");
             }
 
-            if (grid.filterMode == "excel" && filter.type == "double") {
+            if (grid.filterMode === "excel" && filter.type === "double") {
                 query.set(`${prefix + column.name}-op`, filter.operator || "");
                 query.append(`${prefix + column.name}-${filter.second.method}`, filter.second.values[0] || "");
             }
@@ -562,7 +653,7 @@ export class MvcGridColumnFilter {
             query.set(`${prefix}sort`, order);
         }
 
-        if (grid.pager && grid.pager.showPageSizes) {
+        if (grid.pager?.showPageSizes) {
             query.set(`${prefix}rows`, grid.pager.rowsPerPage.value);
         }
 
@@ -589,7 +680,7 @@ export class MvcGridColumnFilter {
             filter.first.values = [];
             filter.second.values = [];
 
-            if (column.grid.filterMode != "excel") {
+            if (column.grid.filterMode !== "excel") {
                 filter.inlineInput!.value = "";
             }
 
@@ -607,20 +698,20 @@ export class MvcGridColumnFilter {
         });
 
         if (filter.options) {
-            if (mode == "row" && filter.type != "multi") {
+            if (mode === "row" && filter.type !== "multi") {
                 filter.inlineInput!.addEventListener("change", function () {
                     filter.first.values = [this.value];
 
                     column.filter!.apply();
                 });
-            } else if (mode == "header" || mode == "row") {
+            } else if (mode === "header" || mode === "row") {
                 filter.inlineInput!.addEventListener("click", function () {
-                    if (this.selectionStart == this.selectionEnd) {
+                    if (this.selectionStart === this.selectionEnd) {
                         MvcGridPopup.show(filter);
                     }
                 });
             }
-        } else if (mode != "excel") {
+        } else if (mode !== "excel") {
             filter.inlineInput!.addEventListener("input", function () {
                 filter.first.values = [this.value];
 
@@ -628,7 +719,7 @@ export class MvcGridColumnFilter {
             });
 
             filter.inlineInput!.addEventListener("keyup", function (e) {
-                if (e.which == 13 && filter.instance!.isValid(this.value)) {
+                if (e.key === "Enter" && filter.instance!.isValid(this.value)) {
                     column.filter!.apply();
                 }
             });
@@ -652,7 +743,7 @@ export class MvcGridPager {
         pager.element = element;
         pager.totalRows = parseInt(element.dataset.totalRows!);
         pager.pages = grid.element.querySelectorAll<HTMLElement>("[data-page]");
-        pager.showPageSizes = element.dataset.showPageSizes == "True";
+        pager.showPageSizes = element.dataset.showPageSizes === "True";
         pager.rowsPerPage = element.querySelector<HTMLInputElement>(".mvc-grid-pager-rows")!;
         pager.currentPage = pager.pages.length ? parseInt(element.querySelector<HTMLElement>(".active")!.dataset.page!) : 1;
 
@@ -660,17 +751,17 @@ export class MvcGridPager {
         pager.bind();
     }
 
-    public apply(page: string, rows?: string) {
+    public apply(page: string | number, rows?: string) {
         const grid = this.grid;
         const query = grid.url.searchParams;
 
         query.delete(`${grid.prefix}page`);
         query.delete(`${grid.prefix}rows`);
 
-        query.set(`${grid.prefix}page`, page);
+        query.set(`${grid.prefix}page`, page.toString());
 
         if (this.showPageSizes) {
-            query.set(`${grid.prefix}rows`, rows == null ? this.rowsPerPage.value : rows);
+            query.set(`${grid.prefix}rows`, typeof rows === "string" ? rows : this.rowsPerPage.value);
         }
 
         grid.reload();
@@ -691,15 +782,13 @@ export class MvcGridPager {
         }
 
         pager.grid.element.querySelectorAll<HTMLInputElement>(".mvc-grid-pager-rows").forEach(rowsPerPage => {
-            rowsPerPage.addEventListener("change", function() {
+            rowsPerPage.addEventListener("change", function () {
                 const rows = parseInt(this.value);
 
-                if (rows) {
-                    const totalPages = Math.ceil(pager.totalRows / rows);
+                if (!isNaN(rows) && rows >= 0) {
+                    const totalPages = rows === 0 ? 1 : Math.ceil(pager.totalRows / rows);
 
                     pager.apply(Math.min(pager.currentPage, totalPages).toString(), rows.toString());
-                } else {
-                    pager.apply("1", rows.toString());
                 }
             });
         });
@@ -764,7 +853,7 @@ export class MvcGridPopup {
         const popup = MvcGridPopup;
         const initiator = e && e.target as Element;
         const visible = popup.element.parentNode;
-        const outside = !(initiator && initiator.closest && initiator.closest(".mvc-grid-popup,.mvc-grid-filter"));
+        const outside = !initiator?.closest(".mvc-grid-popup,.mvc-grid-filter");
 
         if (visible && outside) {
             document.body.removeChild(popup.element);
@@ -789,7 +878,7 @@ export class MvcGridPopup {
         const input = this.element.querySelector<HTMLElement>(selector);
 
         if (input) {
-            if (input.tagName == "SELECT" && (input as HTMLSelectElement).multiple) {
+            if (input.tagName === "SELECT" && (input as HTMLSelectElement).multiple) {
                 for (const option of Array.from((input as HTMLSelectElement).options)) {
                     option.selected = values.indexOf(option.value) >= 0;
                 }
@@ -809,7 +898,7 @@ export class MvcGridPopup {
         preference.draggable = true;
         preference.className = "mvc-grid-column";
 
-        if (column.filter && column.filter.inlineInput) {
+        if (column.filter?.inlineInput) {
             name.innerText = column.filter.inlineInput.placeholder;
         } else {
             name.innerText = column.header.innerText.trim();
@@ -877,7 +966,7 @@ export class MvcGridPopup {
             const dragged = popup.draggedElement!;
             const grid = popup.draggedColumn!.grid;
 
-            if (dropzone != dragged.previousElementSibling && dropzone != dragged.nextElementSibling) {
+            if (dropzone !== dragged.previousElementSibling && dropzone !== dragged.nextElementSibling) {
                 const index = Array.from(popup.element.querySelectorAll(".mvc-grid-dropzone")).indexOf(dropzone);
                 const i = grid.columns.indexOf(popup.draggedColumn!);
 
@@ -908,14 +997,15 @@ export class MvcGridPopup {
         const arrow = element.querySelector<HTMLElement>(".popup-arrow")!;
         let { top, left } = (anchor || grid.element).getBoundingClientRect();
 
-        top += window.pageYOffset - parseFloat(style.borderTopWidth);
-        left += window.pageXOffset - parseFloat(style.borderLeftWidth);
+        top += window.scrollY - parseFloat(style.borderTopWidth);
+        left += window.scrollX - parseFloat(style.borderLeftWidth);
 
         if (anchor) {
             left -= parseFloat(style.marginLeft) - anchor.offsetWidth / 2 + 26;
+
             const arrowLeft = 26 - parseFloat(getComputedStyle(arrow).borderLeftWidth);
             const width = parseFloat(style.marginLeft) + element.offsetWidth + parseFloat(style.marginRight);
-            const offset = Math.max(0, left + width - window.pageXOffset - document.documentElement.clientWidth);
+            const offset = Math.max(0, left + width - window.scrollX - document.documentElement.clientWidth);
 
             top += anchor.offsetHeight / 3 * 2 + arrow.offsetHeight - parseFloat(style.marginTop);
             arrow.style.left = `${Math.max(0, arrowLeft + offset)}px`;
@@ -956,7 +1046,7 @@ export class MvcGridFilter {
         const column = filter.column;
         const columnFilter = column.filter!;
 
-        if (!columnFilter.options && filter.mode != "excel") {
+        if (!columnFilter.options && filter.mode !== "excel") {
             filter.validate(columnFilter.inlineInput!);
         }
 
@@ -976,7 +1066,7 @@ export class MvcGridFilter {
             columnFilter.second.method = filter.methods[0];
         }
     }
-    public isValid(value: string) {
+    public isValid(value: string): boolean {
         return !value || true;
     }
     public validate(input: HTMLInputElement) {
@@ -993,19 +1083,19 @@ export class MvcGridFilter {
         return `<div class="popup-filter">
                     ${filter.renderFilter("first")}
                 </div>
-                ${filter.mode == "excel" && filter.type == "double"
-                    ? `${filter.renderOperator()}
+                ${filter.mode === "excel" && filter.type === "double"
+                ? `${filter.renderOperator()}
                     <div class="popup-filter">
                         ${filter.renderFilter("second")}
                     </div>`
-                    : ""}
+                : ""}
                 ${filter.renderActions()}`;
     }
     public renderFilter(name: "first" | "second") {
         const filter = this;
         const options = filter.column.filter!.options;
         const lang = MvcGrid.lang[filter.column.filter!.name] || {};
-        const multiple = filter.type == "multi" ? " multiple" : "";
+        const multiple = filter.type === "multi" ? " multiple" : "";
         const methods = filter.methods.map(method => `<option value="${method}">${lang[method] || ""}</option>`).join("");
 
         return `<div class="popup-group">
@@ -1014,10 +1104,10 @@ export class MvcGridFilter {
                     </select>
                 </div>
                 <div class="popup-group">${options
-                    ? `<select class="mvc-grid-value" data-filter="${name}"${multiple}>
+                ? `<select class="mvc-grid-value" data-filter="${name}"${multiple}>
                           ${options.innerHTML}
                        </select>`
-                    : `<input class="mvc-grid-value" data-filter="${name}">`}
+                : `<input class="mvc-grid-value" data-filter="${name}">`}
                 </div>`;
     }
     public renderOperator() {
@@ -1065,16 +1155,16 @@ export class MvcGridFilter {
         const filter = this;
 
         for (const input of MvcGridPopup.element.querySelectorAll<HTMLInputElement | HTMLSelectElement>(".mvc-grid-value")) {
-            if (input.tagName == "SELECT") {
+            if (input.tagName === "SELECT") {
                 input.addEventListener("change", () => {
                     const options = Array.from((input as HTMLSelectElement).options).filter(option => option.selected);
 
-                    filter.column.filter![<"first" | "second">input.dataset.filter].values = options.map(option => option.value);
+                    filter.column.filter![input.dataset.filter as "first" | "second"].values = options.map(option => option.value);
 
-                    if (filter.mode != "excel") {
+                    if (filter.mode !== "excel") {
                         const inlineInput = filter.column.filter!.inlineInput!;
 
-                        if (filter.mode == "header" || filter.type == "multi") {
+                        if (filter.mode === "header" || filter.type === "multi") {
                             inlineInput.value = options.map(option => option.text).join(", ");
                         } else {
                             inlineInput.value = input.value;
@@ -1085,12 +1175,12 @@ export class MvcGridFilter {
                 });
             } else {
                 input.addEventListener("input", () => {
-                    filter.column.filter![<"first" | "second">input.dataset.filter].values = [input.value];
+                    filter.column.filter![input.dataset.filter as "first" | "second"].values = [input.value];
 
-                    if (filter.mode != "excel") {
+                    if (filter.mode !== "excel") {
                         const inlineInput = filter.column.filter!.inlineInput!;
 
-                        inlineInput.value = filter.column.filter![<"first" | "second">input.dataset.filter].values.join(", ");
+                        inlineInput.value = filter.column.filter![input.dataset.filter as "first" | "second"].values.join(", ");
 
                         filter.validate(inlineInput);
                     }
@@ -1099,7 +1189,7 @@ export class MvcGridFilter {
                 });
 
                 (input as HTMLInputElement).addEventListener("keyup", function (e) {
-                    if (e.which == 13 && filter.isValid(this.value)) {
+                    if (e.key === "Enter" && filter.isValid(this.value)) {
                         filter.column.filter!.apply();
                     }
                 });

@@ -1,11 +1,14 @@
 /*!
- * Mvc.Grid 7.0.1
+ * Mvc.Grid 7.1 (NonFactors + x600)
  *
  * Copyright © NonFactors
  *
  * Licensed under the terms of the MIT License
  * https://www.opensource.org/licenses/mit-license.php
  * https://aspnet-core-grid.azurewebsites.net/
+ * 
+ * X600.Grid 7.1
+ * 
  */
 
 import { AjaxException } from "../../Network/AjaxException.js";
@@ -255,7 +258,7 @@ export class MvcGrid {
         }
 
         return rowCount;
-	}
+    }
 
 
     public reload() {
@@ -379,7 +382,7 @@ export class MvcGrid {
 
         this.element.setAttribute("data-error", "true");
         this.errorLabel.innerHTML = errorMessage;
-	}
+    }
 
     private buildSort() {
         const map = new Map<string, "asc" | "desc">();
