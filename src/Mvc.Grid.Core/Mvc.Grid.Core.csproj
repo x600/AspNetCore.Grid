@@ -16,6 +16,7 @@
     <FileVersion>7.1.0.22155</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageReleaseNotes>Added error handling</PackageReleaseNotes>
+    <Authors>NonFactors &amp; Andrey Makarov</Authors>
   </PropertyGroup>
 
   <ItemGroup>
