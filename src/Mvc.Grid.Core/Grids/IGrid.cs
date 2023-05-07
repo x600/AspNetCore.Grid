@@ -33,6 +33,8 @@ namespace NonFactors.Mvc.Grid
         int MinRowNumber { get; }
         int MaxRowNumber { get; }
 
+        bool UseCustomPaging { get; set; } 
+
         #endregion
 
     }

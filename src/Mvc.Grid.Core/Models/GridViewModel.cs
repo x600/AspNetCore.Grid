@@ -17,5 +17,9 @@ namespace NonFactors.Mvc.Grid
         {
             Name = name;
         }
+
+        public int VirtualRowCount = 0;
+
+        //public bool UseCustomPaging {get; set; }
     }
 }

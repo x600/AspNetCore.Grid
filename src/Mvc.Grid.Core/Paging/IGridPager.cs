@@ -5,7 +5,7 @@ namespace NonFactors.Mvc.Grid
 {
     public interface IGridPager
     {
-        Int32 TotalPages { get; }
+        Int32 TotalPages { get;}
         Int32 TotalRows { get; set; }
         Int32 CurrentPage { get; set; }
         Int32 RowsPerPage { get; set; }
@@ -18,7 +18,7 @@ namespace NonFactors.Mvc.Grid
         String PartialViewName { get; set; }
 
         #region X600
-
+            
         PagerDisplayPosition Position { get; set; }
 
         #endregion

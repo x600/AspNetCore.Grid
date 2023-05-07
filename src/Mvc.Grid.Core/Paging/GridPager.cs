@@ -5,15 +5,17 @@ using System.Linq;
 namespace NonFactors.Mvc.Grid
 {
     public enum PagerDisplayPosition { Top, Bottom, TopAndBottom }
+    
 
     public class GridPager<T> : IGridPager<T>
     {
+        int? totalRows = null;
         public IGrid<T> Grid { get; set; }
 
         public virtual Int32 TotalRows
         {
-            get;
-            set;
+            get { return totalRows ?? 0; }
+            set { totalRows = value; }
         }
         public virtual Int32 TotalPages
         {
@@ -117,15 +119,30 @@ namespace NonFactors.Mvc.Grid
 
         public virtual IQueryable<T> Process(IQueryable<T> items)
         {
-            TotalRows = items.Count();
-
-            if (RowsPerPage == 0)
-                return items;
+			if (RowsPerPage == 0)
+			{
+				return items;
+			}
 
             if (!GridQuery.IsOrdered(items))
+            {
                 items = items.OrderBy(_ => 0);
+            }
 
-            return items.Skip((CurrentPage - 1) * RowsPerPage).Take(RowsPerPage);
+			if (totalRows.HasValue)
+            {
+                //custom paging enabled
+
+                return items;
+            }
+            else
+            {
+                totalRows = items.Count();
+				return items.Skip((CurrentPage - 1) * RowsPerPage).Take(RowsPerPage);
+			}
+
+
+            
         }
     }
 }
