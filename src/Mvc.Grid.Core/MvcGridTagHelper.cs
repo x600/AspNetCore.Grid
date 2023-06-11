@@ -27,7 +27,11 @@ namespace NonFactors.Mvc.Grid.TagHelpers
         [HtmlAttributeName("asp-controller")]
         public string? Controller { get; set; }
 
-        public override void Process(TagHelperContext context, TagHelperOutput output)
+		[HtmlAttributeName("asp-showPageSizes")]
+		public bool ShowPageSizes { get; set; }
+
+
+		public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             if (string.IsNullOrEmpty(Controller))
             {
@@ -42,6 +46,7 @@ namespace NonFactors.Mvc.Grid.TagHelpers
 
             output.Attributes.Add("data-url", url);
             output.Attributes.Add("class", "mvc-grid");
+            output.Attributes.Add("data-showPageSizes", ShowPageSizes.ToString().ToLower());
 
             base.Process(context, output);
         }

@@ -20,6 +20,8 @@ namespace NonFactors.Mvc.Grid
 
         public int VirtualRowCount = 0;
 
+        public bool ShowPageSizes { get; set; } 
+
         //public bool UseCustomPaging {get; set; }
     }
 }
