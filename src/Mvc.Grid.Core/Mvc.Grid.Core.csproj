@@ -12,7 +12,7 @@
 		<RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
-		<AssemblyVersion>7.1.23314.3</AssemblyVersion>
+		<AssemblyVersion>7.1.23314.6</AssemblyVersion>
 		<PackageVersion>$(AssemblyVersion)</PackageVersion>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>NonFactors &amp; Andrey Makarov</Authors>
