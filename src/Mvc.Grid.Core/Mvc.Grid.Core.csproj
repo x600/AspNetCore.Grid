@@ -1,27 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <Version>7.1.0.22155</Version>
-    <Nullable>enable</Nullable>
-    <Company>Andrey Makarov</Company>
-    <LangVersion>8.0</LangVersion>
-    <GenerateFullPaths>true</GenerateFullPaths>
-    <Copyright>Copyright © NonFactors</Copyright>
-    <PackageId>MVCGrid.Core.Mvc6</PackageId>
-    <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
-    <AssemblyVersion>7.1.23171.0</AssemblyVersion>
-    <FileVersion>7.1.0.22155</FileVersion>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Added error handling</PackageReleaseNotes>
-    <Authors>NonFactors &amp; Andrey Makarov</Authors>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Version>7.1.0.22155</Version>
+		<Nullable>enable</Nullable>
+		<Company>Andrey Makarov</Company>
+		<LangVersion>8.0</LangVersion>
+		<GenerateFullPaths>true</GenerateFullPaths>
+		<Copyright>Copyright © NonFactors</Copyright>
+		<PackageId>MVCGrid.Core.Mvc6</PackageId>
+		<TargetFramework>net6.0</TargetFramework>
+		<RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
+		<AssemblyVersion>7.1.23314.3</AssemblyVersion>
+		<PackageVersion>$(AssemblyVersion)</PackageVersion>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>NonFactors &amp; Andrey Makarov</Authors>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
-  </ItemGroup>
+	<PropertyGroup>
+		<RepositoryUrl>https://github.com/x600/MVCGrid</RepositoryUrl>
+		<NuGetSourceRelease>https://nuget.pkg.github.com/x600/index.json</NuGetSourceRelease>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
+	</ItemGroup>
+
+	<Target Name="PostBuildRelease" AfterTargets="Pack" Condition="'$(NuGetSourceRelease)' != '' And '$(Configuration)' == 'Release'">
+		<Exec Command="echo $(NuGetPath)nuget.exe push &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(MSBuildProjectName).$(PackageVersion).nupkg&quot; -Source &quot;$(NuGetSourceRelease)&quot; -Verbosity Detailed" />
+	</Target>
 
 </Project>
