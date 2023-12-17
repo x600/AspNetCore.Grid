@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace NonFactors.Mvc.Grid
 {
@@ -27,6 +28,7 @@ namespace NonFactors.Mvc.Grid
 		public IGridColumnsOf<T> Columns { get; set; }
 
 		IGridRows<Object> IGrid.Rows => Rows;
+
 		public IGridRowsOf<T> Rows { get; set; }
 
 		IGridPager? IGrid.Pager => Pager;
@@ -40,7 +42,7 @@ namespace NonFactors.Mvc.Grid
 			Source = source.AsQueryable();
 			FilterMode = GridFilterMode.Excel;
 			Mode = GridProcessingMode.Automatic;
-			Attributes = new GridHtmlAttributes();
+			Attributes = new GridHtmlAttributes();	
 			Processors = new HashSet<IGridProcessor<T>>();
 
 			Columns = new GridColumns<T>(this);
@@ -50,18 +52,33 @@ namespace NonFactors.Mvc.Grid
 
 		#region X600
 
-		public bool UseCustomPaging { get; set; }
+		int? _totalRowsCount = null;
+
+		public bool UseCustomPaging
+		{
+			get
+			{
+				return _totalRowsCount != null;
+			}
+		}
 
 		public int TotalRowsCount
 		{
 			get
 			{
-				if (Pager == null) return 0;
-
-				return Pager.TotalRows;
-
-				//if (Source == null) return 0;
-				//else return Source.Count();
+				if (_totalRowsCount != null) return _totalRowsCount.Value;
+				return Rows.Count();
+			}
+			set
+			{
+				if (value >= Rows.Count())
+				{
+					_totalRowsCount = value;
+				}
+				else
+				{
+					_totalRowsCount = null;
+				}
 			}
 		}
 
@@ -99,6 +116,14 @@ namespace NonFactors.Mvc.Grid
 					return CurrentPage * Pager.RowsPerPage;
 				}
 				return TotalRowsCount;
+			}
+		}
+
+		public bool IsPagerVisible
+		{
+			get
+			{
+				return Pager != null && TotalRowsCount > Pager.RowsPerPage;
 			}
 		}
 

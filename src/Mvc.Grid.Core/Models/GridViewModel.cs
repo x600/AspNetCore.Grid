@@ -18,7 +18,7 @@ namespace NonFactors.Mvc.Grid
             Name = name;
         }
 
-        public int VirtualRowCount = 0;
+        public int? VirtualRowCount;
 
         public bool ShowPageSizes { get; set; } 
 

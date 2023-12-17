@@ -6,7 +6,8 @@ namespace NonFactors.Mvc.Grid
     public interface IGridPager
     {
         Int32 TotalPages { get;}
-        Int32 TotalRows { get; set; }
+        
+        //Int32 TotalRows { get; set; }
         Int32 CurrentPage { get; set; }
         Int32 RowsPerPage { get; set; }
         Int32 FirstDisplayPage { get; }
@@ -20,6 +21,10 @@ namespace NonFactors.Mvc.Grid
         #region X600
             
         PagerDisplayPosition Position { get; set; }
+
+        //void UseCustomPaging(int totalRowCount);
+
+        //bool UseCustomPaging { get; }
 
         #endregion
     }

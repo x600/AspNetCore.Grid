@@ -26,14 +26,21 @@ namespace NonFactors.Mvc.Grid
 
         #region X600
 
-        int TotalRowsCount { get; }
+        /// <summary>
+        /// When set to true, the grid pager will rely on the TotalRowsCount property to calculate the number of pages.
+        /// </summary>
+        int TotalRowsCount { get; set; }
 
         int CurrentPage { get; }
-
+        
         int MinRowNumber { get; }
         int MaxRowNumber { get; }
+        
+        bool UseCustomPaging { get; } 
 
-        bool UseCustomPaging { get; set; } 
+        bool IsPagerVisible { get; }
+
+        //internal int VirtualRowsCount { get; set; }
 
         #endregion
 

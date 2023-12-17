@@ -10,24 +10,20 @@ namespace NonFactors.Mvc.Grid
     public class GridPager<T> : IGridPager<T>
     {
         int? totalRows = null;
+
         public IGrid<T> Grid { get; set; }
 
-        public virtual Int32 TotalRows
-        {
-            get { return totalRows ?? 0; }
-            set { totalRows = value; }
-        }
         public virtual Int32 TotalPages
         {
             get
             {
-                if (TotalRows == 0)
+                if (Grid.TotalRowsCount == 0)
                     return 0;
 
                 if (RowsPerPage == 0)
                     return 1;
 
-                return (Int32)Math.Ceiling(TotalRows / (Double)RowsPerPage);
+                return (Int32)Math.Ceiling(Grid.TotalRowsCount / (Double)RowsPerPage);
             }
         }
         public virtual Int32 CurrentPage
@@ -97,15 +93,7 @@ namespace NonFactors.Mvc.Grid
         private Int32 CurrentPageValue { get; set; }
         private Int32 RowsPerPageValue { get; set; }
 
-        #region X600
-
-        public PagerDisplayPosition Position { get; set; } = PagerDisplayPosition.TopAndBottom;
-
-
-
-        #endregion
-
-        public GridPager(IGrid<T> grid)
+		public GridPager(IGrid<T> grid)
         {
             Grid = grid;
             CssClasses = "";
@@ -144,5 +132,24 @@ namespace NonFactors.Mvc.Grid
 
             
         }
-    }
+
+		#region X600
+
+		public PagerDisplayPosition Position { get; set; } = PagerDisplayPosition.TopAndBottom;
+
+
+		//public virtual int TotalRows
+		//{
+		//	get { return totalRows ?? 0; }
+		//	set { totalRows = value; }
+		//}
+
+		//public void UseCustomPaging(int totalRowCount)
+		//{
+		//	Grid.UseCustomPaging = true;
+		//	totalRows = totalRowCount;
+		//}
+
+		#endregion
+	}
 }

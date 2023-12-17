@@ -8,11 +8,11 @@
 		<GenerateFullPaths>true</GenerateFullPaths>
 		<Copyright>Copyright © NonFactors</Copyright>
 		<PackageId>MVCGrid.Core.Mvc6</PackageId>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net7.0;net6.0</TargetFrameworks>
 		<RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
-		<AssemblyVersion>7.1.23314.3</AssemblyVersion>
+		<AssemblyVersion>7.3.23351.1</AssemblyVersion>
 		<PackageVersion>$(AssemblyVersion)</PackageVersion>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>NonFactors &amp; Andrey Makarov</Authors>

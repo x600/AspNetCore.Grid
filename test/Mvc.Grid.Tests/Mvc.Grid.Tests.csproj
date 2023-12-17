@@ -7,7 +7,7 @@
     <LangVersion>8.0</LangVersion>
     <GenerateFullPaths>true</GenerateFullPaths>
     <Copyright>Copyright © NonFactors</Copyright>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>NonFactors.Mvc.Grid.Tests</RootNamespace>
     <DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>

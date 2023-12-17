@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -142,9 +143,13 @@ namespace NonFactors.Mvc.Grid
             return html;
         }
 
-		public static IHtmlGrid<T> UseCustomPaging<T>(this IHtmlGrid<T> html)
-		{
-			html.Grid.UseCustomPaging = true;          
+        public static IHtmlGrid<T> UseCustomPaging<T>(this IHtmlGrid<T> html, int? virtualRowsCount)
+        {
+            if (virtualRowsCount != null)
+            {
+                html.Grid.TotalRowsCount = virtualRowsCount.Value;
+            }
+
 			return html;
 		}
 
