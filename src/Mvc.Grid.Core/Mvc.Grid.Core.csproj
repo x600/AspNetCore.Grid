@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Version>7.1.0.22155</Version>
 		<Nullable>enable</Nullable>
 		<Company>Andrey Makarov</Company>
-		<LangVersion>8.0</LangVersion>
 		<GenerateFullPaths>true</GenerateFullPaths>
 		<Copyright>Copyright © NonFactors</Copyright>
 		<PackageId>MVCGrid.Core.Mvc6</PackageId>
 		<TargetFrameworks>net7.0;net6.0</TargetFrameworks>
 		<RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
 		<DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
 		<AssemblyVersion>7.3.23351.1</AssemblyVersion>
 		<PackageVersion>$(AssemblyVersion)</PackageVersion>
@@ -21,6 +21,7 @@
 	<PropertyGroup>
 		<RepositoryUrl>https://github.com/x600/MVCGrid</RepositoryUrl>
 		<NuGetSourceRelease>https://nuget.pkg.github.com/x600/index.json</NuGetSourceRelease>
+		<Version>$(AssemblyVersion)</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -29,7 +30,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuildRelease" AfterTargets="Pack" Condition="'$(NuGetSourceRelease)' != '' And '$(Configuration)' == 'Release'">
-		<Exec Command="echo $(NuGetPath)nuget.exe push &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(MSBuildProjectName).$(PackageVersion).nupkg&quot; -Source &quot;$(NuGetSourceRelease)&quot; -Verbosity Detailed" />
+		<Exec Command="echo $(NuGetPath)nuget.exe push &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(PackageId).$(PackageVersion).nupkg&quot; -Source &quot;$(NuGetSourceRelease)&quot; -Verbosity Detailed" />
 	</Target>
 
 </Project>
