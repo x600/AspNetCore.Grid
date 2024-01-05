@@ -67,7 +67,7 @@ namespace NonFactors.Mvc.Grid
 			get
 			{
 				if (_totalRowsCount != null) return _totalRowsCount.Value;
-				return Rows.Count();
+				return Source.Count();// Rows.Count();
 			}
 			set
 			{
