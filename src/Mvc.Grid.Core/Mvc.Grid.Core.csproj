@@ -12,7 +12,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn);1591</NoWarn>
 		<DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
-		<AssemblyVersion>7.3.23351.1</AssemblyVersion>
+		<AssemblyVersion>7.3.24032.1</AssemblyVersion>
 		<PackageVersion>$(AssemblyVersion)</PackageVersion>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>NonFactors &amp; Andrey Makarov</Authors>
