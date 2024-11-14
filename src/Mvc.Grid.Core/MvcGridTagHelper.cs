@@ -19,7 +19,7 @@ namespace NonFactors.Mvc.Grid.TagHelpers
 
         [ViewContext]
         [HtmlAttributeNotBound]
-        public ViewContext? ViewContext { get; set; }
+        public required ViewContext ViewContext { get; set; }
 
         [HtmlAttributeName("asp-action")]
         public string? Action { get; set; }

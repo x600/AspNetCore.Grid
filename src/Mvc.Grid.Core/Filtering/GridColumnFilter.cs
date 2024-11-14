@@ -152,7 +152,7 @@ namespace NonFactors.Mvc.Grid
             }
 
             String method = keys[1].Substring(columnName.Length);
-            String value = Column.Grid.Query![keys[1]][0];
+            string? value = Column.Grid.Query![keys[1]][0];
 
             return CreateFilter(method, value);
         }

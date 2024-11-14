@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<Nullable>enable</Nullable>
@@ -6,27 +6,29 @@
 		<GenerateFullPaths>true</GenerateFullPaths>
 		<Copyright>Copyright © NonFactors</Copyright>
 		<PackageId>MVCGrid.Core.Mvc6</PackageId>
-		<TargetFrameworks>net7.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<RootNamespace>NonFactors.Mvc.Grid</RootNamespace>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn);1591</NoWarn>
 		<DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
-		<AssemblyVersion>7.3.24032.1</AssemblyVersion>
+		<AssemblyVersion>7.4.24309.2</AssemblyVersion>
 		<PackageVersion>$(AssemblyVersion)</PackageVersion>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>NonFactors &amp; Andrey Makarov</Authors>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<RepositoryUrl>https://github.com/x600/MVCGrid</RepositoryUrl>
 		<NuGetSourceRelease>https://nuget.pkg.github.com/x600/index.json</NuGetSourceRelease>
 		<Version>$(AssemblyVersion)</Version>
+		<OutputType>Library</OutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
+		<!--<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />-->
 	</ItemGroup>
 
 	<Target Name="PostBuildRelease" AfterTargets="Pack" Condition="'$(NuGetSourceRelease)' != '' And '$(Configuration)' == 'Release'">

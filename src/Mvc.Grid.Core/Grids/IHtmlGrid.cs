@@ -3,8 +3,8 @@ using System;
 
 namespace NonFactors.Mvc.Grid
 {
-    public interface IHtmlGrid<T> : IHtmlContent
-    {
+    public interface IHtmlGrid<T> : IHtmlAsyncContent
+	{
         IGrid<T> Grid { get; }
 
         String PartialViewName { get; set; }

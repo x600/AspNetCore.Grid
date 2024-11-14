@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.IO;
+using System.Text;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 
 namespace NonFactors.Mvc.Grid
 {
@@ -20,9 +22,15 @@ namespace NonFactors.Mvc.Grid
             grid.Query ??= grid.ViewContext.HttpContext.Request.Query;
         }
 
-        public void WriteTo(TextWriter writer, HtmlEncoder encoder)
-        {
-            Html.Partial(PartialViewName, Grid).WriteTo(writer, encoder);
-        }
-    }
+		public async ValueTask WriteToAsync(TextWriter writer)
+		{
+			var result = await Html.PartialAsync(PartialViewName, Grid);
+			result.WriteTo(writer, HtmlEncoder.Default);
+		}
+
+		public void WriteTo(TextWriter writer, HtmlEncoder encoder)
+		{
+			Html.PartialAsync(PartialViewName, Grid).Result.WriteTo(writer, encoder);
+		}
+	}
 }
